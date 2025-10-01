@@ -2,6 +2,10 @@
 output/*
 !output/.gitkeep
 
+# Exclude input files but keep the input directory
+input/*
+!input/.gitkeep
+
 # Python cache files
 __pycache__/
 *.py[cod]
