@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV Audio Splitter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-upload {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #4facfe;
+            background-color: #f8f9ff;
+        }
+
+        .file-upload.dragover {
+            border-color: #4facfe;
+            background-color: #f0f8ff;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .parameters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .param-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .param-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .param-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .param-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .param-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .file-info h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .download-section {
+            margin-top: 20px;
+        }
+
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .download-link {
+            color: #4facfe;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .parameters {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 WAV Audio Splitter</h1>
+            <p>Split your long WAV files into smaller segments based on silence detection</p>
+        </div>
+        
+        <div class="content">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="upload-section">
+                    <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" name="file" accept=".wav" required>
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click to select a WAV file</div>
+                        <div class="upload-hint">or drag and drop your file here</div>
+                    </div>
+                </div>
+                
+                <div class="info-note" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                    <strong>📝 Note:</strong> For very short audio files (1-few seconds), if the file duration is shorter than your specified maximum duration, the file will be kept as a single segment without splitting.
+                </div>
+                
+                <div class="parameters">
+                    <div class="param-group">
+                        <label for="maxDuration">Maximum Duration (seconds)</label>
+                <input type="number" id="maxDuration" name="max_duration" value="60" min="1" max="3600" required>
+                <div class="param-hint">Maximum length for each audio segment. For short files (1-few seconds), the file will remain as one piece if shorter than this duration.</div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <label for="minSilence">Minimum Silence Length (ms)</label>
+                        <input type="number" id="minSilence" name="min_silence_len" value="1000" min="100" max="5000" required>
+                        <div class="param-hint">Minimum silence duration to consider as split point</div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <label for="silenceThresh">Silence Threshold (dB)</label>
+                        <input type="number" id="silenceThresh" name="silence_thresh" value="-40" min="-80" max="0" required>
+                        <div class="param-hint">Audio level below which is considered silence</div>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">Upload & Process</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearFiles()">Clear All Files</button>
+                </div>
+            </form>
+            
+            <div id="status" class="status"></div>
+            
+            <div id="fileInfo" class="file-info" style="display: none;"></div>
+            
+            <div id="downloadSection" class="download-section" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentJobId = null;
+        
+        // File upload handling
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const fileUpload = document.querySelector('.file-upload');
+        const statusDiv = document.getElementById('status');
+        const fileInfoDiv = document.getElementById('fileInfo');
+        const downloadSection = document.getElementById('downloadSection');
+        
+        // Drag and drop functionality
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+        
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+        
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.toLowerCase().endsWith('.wav')) {
+                fileInput.files = files;
+                updateFileDisplay(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                updateFileDisplay(e.target.files[0]);
+            }
+        });
+        
+        function updateFileDisplay(file) {
+            const uploadText = document.querySelector('.upload-text');
+            uploadText.textContent = `Selected: ${file.name}`;
+        }
+        
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentJobId = result.job_id;
+                    showStatus('File uploaded successfully! Processing...', 'info');
+                    showFileInfo(result.audio_info);
+                    
+                    // Start processing
+                    await processAudio(currentJobId);
+                } else {
+                    showStatus(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Upload failed: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload & Process';
+            }
+        });
+        
+        async function processAudio(jobId) {
+            try {
+                const response = await fetch(`/process/${jobId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showStatus(`Processing completed! Generated ${result.total_segments} segments.`, 'success');
+                    showDownloadSection(result.output_files, jobId);
+                } else {
+                    showStatus(`Processing failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Processing failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        function showFileInfo(audioInfo) {
+            const duration = Math.round(audioInfo.duration_seconds);
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            
+            fileInfoDiv.innerHTML = `
+                <h4>Audio File Information</h4>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span>Duration:</span>
+                        <span>${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Channels:</span>
+                        <span>${audioInfo.channels}</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Sample Rate:</span>
+                        <span>${audioInfo.frame_rate} Hz</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Bit Depth:</span>
+                        <span>${audioInfo.sample_width * 8} bit</span>
+                    </div>
+                </div>
+            `;
+            fileInfoDiv.style.display = 'block';
+        }
+        
+        function showDownloadSection(files, jobId) {
+            let html = `
+                <h4>Download Split Files</h4>
+                <div class="buttons" style="margin-bottom: 15px;">
+                    <a href="/download_all/${jobId}" class="btn btn-primary">Download All (ZIP)</a>
+                </div>
+                <div class="file-list">
+            `;
+            
+            files.forEach(filename => {
+                html += `
+                    <div class="file-item">
+                        <span>${filename}</span>
+                        <a href="/download/${filename}" class="download-link">Download</a>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            downloadSection.innerHTML = html;
+            downloadSection.style.display = 'block';
+        }
+        
+        async function clearFiles() {
+            if (confirm('Are you sure you want to clear all files?')) {
+                try {
+                    const response = await fetch('/clear');
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        showStatus('All files cleared successfully!', 'success');
+                        fileInfoDiv.style.display = 'none';
+                        downloadSection.style.display = 'none';
+                        
+                        // Reset form
+                        uploadForm.reset();
+                        document.querySelector('.upload-text').textContent = 'Click to select a WAV file';
+                        currentJobId = null;
+                    } else {
+                        showStatus(`Clear failed: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`Clear failed: ${error.message}`, 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
